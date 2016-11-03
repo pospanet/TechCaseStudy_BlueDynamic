@@ -1,0 +1,273 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "nameRoot": {
+      "defaultValue": "retailizer",
+      "type": "String"
+    },
+    "iotHubSKU": {
+      "type": "string",
+      "allowedValues": [
+        "F1",
+        "S1",
+        "S2"
+      ],
+      "defaultValue": "S1"
+    },
+    "eventsQueueName": {
+      "defaultValue": "events",
+      "type": "String"
+    },
+    "hostingPlanSKU": {
+      "type": "string",
+      "allowedValues": [
+        "Free",
+        "Shared",
+        "Basic",
+        "Standard"
+      ],
+      "defaultValue": "Free"
+    },
+    "hostingPlanWorkerSize": {
+      "type": "string",
+      "allowedValues": [
+        "0",
+        "1",
+        "2"
+      ],
+      "defaultValue": "0"
+    }
+  },
+  "variables": {
+    "backendName": "[concat(parameters('nameRoot'), '-backend', uniqueString(subscription().subscriptionId))]",
+    "hostingPlanName": "[concat(parameters('nameRoot'), '-plan')]",
+    "documentDbName": "[concat(toLower(parameters('nameRoot')), uniqueString(subscription().subscriptionId))]",
+    "storageAccountName": "[concat(toLower(parameters('nameRoot')), uniqueString(subscription().subscriptionId))]",
+    "iotHubName": "[concat(parameters('nameRoot'), '-hub', uniqueString(subscription().subscriptionId))]",
+    "serviceBusNamespaceName": "[concat(parameters('nameRoot'), '-ns', uniqueString(subscription().subscriptionId))]",
+    "faceApiName": "[concat(parameters('nameRoot'), '-face')]",
+    "emotionApiName": "[concat(parameters('nameRoot'), '-emotion')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "sku": {
+        "name": "F0"
+      },
+      "kind": "Emotion",
+      "name": "[variables('emotionApiName')]",
+      "apiVersion": "2016-02-01-preview",
+      "location": "westus",
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "sku": {
+        "name": "F0"
+      },
+      "kind": "Face",
+      "name": "[variables('faceApiName')]",
+      "apiVersion": "2016-02-01-preview",
+      "location": "westus",
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Devices/IotHubs",
+      "sku": {
+        "name": "[parameters('iotHubSKU')]",
+        "capacity": 1
+      },
+      "name": "[variables('iotHubName')]",
+      "apiVersion": "2016-02-03",
+      "location": "North Europe",
+      "tags": {},
+      "properties": {
+        "eventHubEndpoints": {
+          "events": {
+            "retentionTimeInDays": 1,
+            "partitionCount": 2,
+            "partitionIds": [
+              "0",
+              "1"
+            ]
+          },
+          "operationsMonitoringEvents": {
+            "retentionTimeInDays": 1,
+            "partitionCount": 2,
+            "partitionIds": [
+              "0",
+              "1"
+            ]
+          }
+        },
+        "storageEndpoints": {
+          "$default": {
+            "sasTtlAsIso8601": "PT1H",
+            "connectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]",
+            "containerName": "faces"
+          }
+        },
+        "enableFileUploadNotifications": false,
+        "cloudToDevice": {
+          "maxDeliveryCount": 10,
+          "defaultTtlAsIso8601": "PT1H",
+          "feedback": {
+            "lockDurationAsIso8601": "PT1M",
+            "ttlAsIso8601": "PT1H",
+            "maxDeliveryCount": 10
+          }
+        },
+        "features": "DeviceManagement"
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "GlobalDocumentDB",
+      "name": "[variables('documentDbName')]",
+      "apiVersion": "2015-04-08",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "name": "[variables('documentDbName')]"
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces",
+      "sku": {
+        "name": "Basic",
+        "tier": "Basic"
+      },
+      "kind": "Messaging",
+      "name": "[variables('serviceBusNamespaceName')]",
+      "apiVersion": "2015-08-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "resources": [
+        {
+          "type": "queues",
+          "name": "[parameters('eventsQueueName')]",
+          "apiVersion": "2015-08-01",
+          "properties": {
+            "defaultMessageTimeToLive": "14.00:00:00",
+            "deadLetteringOnMessageExpiration": false,
+            "enableBatchedOperations": true,
+            "isAnonymousAccessible": false,
+            "supportOrdering": true,
+            "enablePartitioning": false,
+            "enableExpress": false
+          },
+          "resources": [],
+          "dependsOn": [
+            "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusNamespaceName'))]"
+          ]
+        },
+        {
+          "type": "AuthorizationRules",
+          "name": "RootManageSharedAccessKey",
+          "apiVersion": "2015-08-01",
+          "properties": {
+            "rights": [
+              "Listen",
+              "Manage",
+              "Send"
+            ]
+          },
+          "resources": [],
+          "dependsOn": [
+            "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusNamespaceName'))]"
+          ]
+        }
+      ],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2016-01-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "name": "[variables('hostingPlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-06-01",
+      "dependsOn": [],
+      "tags": {},
+      "properties": {
+        "name": "[variables('hostingPlanName')]",
+        "sku": "[parameters('hostingPlanSKU')]",
+        "workerSize": "[parameters('hostingPlanWorkerSize')]",
+        "numberOfWorkers": 1
+      }
+    },
+    {
+      "name": "[variables('backendName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
+      ],
+      "tags": {},
+      "properties": {
+        "name": "[variables('backendName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "StorageConnectionString": {
+      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2016-01-01').keys[0].value)]",
+      "type": "string"
+    },
+    "StorageKeys": {
+      "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2016-01-01')]",
+      "type": "object"
+    },
+    "ServiceBusKeys": {
+      "value": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNamespaceName'), 'RootManageSharedAccessKey'), '2015-08-01')]",
+      "type": "object"
+    },
+    "IotHubKeys": {
+      "value": "[listKeys(resourceId('Microsoft.Devices/IotHubs/Iothubkeys', variables('iotHubName'), 'iothubowner'), '2016-02-03')]",
+      "type": "object"
+    },
+    "DocumentDbEndpoint": {
+      "value": "[concat('https://', variables('documentDbName'), '.documents.azure.com:443')]",
+      "type": "string"
+    },
+    "DocumentDbKeys": {
+      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('documentDbName')), '2015-04-08')]",
+      "type": "object"
+    },
+    "FaceApiKeys": {
+      "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('faceApiName')), '2016-02-01-preview')]",
+      "type": "object"
+    },
+    "EmotionApiKeys": {
+      "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('emotionApiName')), '2016-02-01-preview')]",
+      "type": "object"
+    }
+  }
+}

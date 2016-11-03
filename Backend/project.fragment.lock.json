@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "exports": {
+    "Common/1.0.0": {
+      "type": "project",
+      "framework": ".NETFramework,Version=v4.5.2",
+      "compile": {
+        "bin/Debug/Retailizer.Common.dll": {}
+      },
+      "runtime": {
+        "../packages/DotNetty.Buffers-signed.0.3.2/lib/net45/DotNetty.Buffers.dll": {},
+        "../packages/DotNetty.Codecs-signed.0.3.2/lib/net45/DotNetty.Codecs.dll": {},
+        "../packages/DotNetty.Codecs.Mqtt-signed.0.3.2/lib/net45/DotNetty.Codecs.Mqtt.dll": {},
+        "../packages/DotNetty.Common-signed.0.3.2/lib/net45/DotNetty.Common.dll": {},
+        "../packages/DotNetty.Handlers-signed.0.3.2/lib/net45/DotNetty.Handlers.dll": {},
+        "../packages/DotNetty.Transport-signed.0.3.2/lib/net45/DotNetty.Transport.dll": {},
+        "../packages/EnterpriseLibrary.TransientFaultHandling.6.0.1304.0/lib/portable-net45+win+wp8/Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling.dll": {},
+        "../packages/Microsoft.AspNet.WebApi.Client.5.2.3/lib/net45/System.Net.Http.Formatting.dll": {},
+        "../packages/Microsoft.AspNet.WebApi.Core.5.2.3/lib/net45/System.Web.Http.dll": {},
+        "../packages/Microsoft.Azure.Amqp.1.1.5/lib/net451/Microsoft.Azure.Amqp.dll": {},
+        "../packages/Microsoft.Azure.Devices.1.0.15/lib/net451/Microsoft.Azure.Devices.dll": {},
+        "../packages/Microsoft.Azure.Devices.Client.1.0.19/lib/net45/Microsoft.Azure.Devices.Client.dll": {},
+        "../packages/Microsoft.Azure.DocumentDB.1.9.5/lib/net45/Microsoft.Azure.Documents.Client.dll": {},
+        "../packages/Microsoft.Azure.KeyVault.Core.1.0.0/lib/net40/Microsoft.Azure.KeyVault.Core.dll": {},
+        "../packages/Microsoft.Data.Edm.5.6.4/lib/net40/Microsoft.Data.Edm.dll": {},
+        "../packages/Microsoft.Data.OData.5.6.4/lib/net40/Microsoft.Data.OData.dll": {},
+        "../packages/Microsoft.Data.Services.Client.5.6.4/lib/net40/Microsoft.Data.Services.Client.dll": {},
+        "../packages/Microsoft.Extensions.Configuration.1.0.0/lib/netstandard1.1/Microsoft.Extensions.Configuration.dll": {},
+        "../packages/Microsoft.Extensions.Configuration.Abstractions.1.0.0/lib/netstandard1.0/Microsoft.Extensions.Configuration.Abstractions.dll": {},
+        "../packages/Microsoft.Extensions.Primitives.1.0.0/lib/netstandard1.0/Microsoft.Extensions.Primitives.dll": {},
+        "../packages/Microsoft.ProjectOxford.Face.1.2.1.1/lib/portable-net45+wp80+win8+wpa81+aspnetcore50/Microsoft.ProjectOxford.Face.dll": {},
+        "../packages/Mono.Security.3.2.3.0/lib/net45/Mono.Security.dll": {},
+        "../packages/Newtonsoft.Json.9.0.1/lib/net45/Newtonsoft.Json.dll": {},
+        "../packages/PCLCrypto.1.0.86/lib/net40-Client/PCLCrypto.dll": {},
+        "../packages/System.Spatial.5.6.4/lib/net40/System.Spatial.dll": {},
+        "../packages/Validation.2.2.8/lib/dotnet/Validation.dll": {},
+        "../packages/WindowsAzure.Storage.7.2.1/lib/net40/Microsoft.WindowsAzure.Storage.dll": {},
+        "bin/Debug/Retailizer.Common.dll": {}
+      },
+      "contentFiles": {
+        "bin/Debug/Retailizer.Common.pdb": {
+          "buildAction": "None",
+          "codeLanguage": "any",
+          "copyToOutput": true
+        }
+      }
+    }
+  }
+}
