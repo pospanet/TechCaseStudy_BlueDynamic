@@ -21,7 +21,7 @@ Schema overview:
 
  ![1-diagram](images/1-diagram.png)
 
- ## Solution, steps and delivery
+## Solution, steps and delivery
 
 We decided to use Retailizer as a code name for this project. Let’s take a deep dive into solution technical details. We will go through the process from a person standing in front of a camera, all the way to the cloud and Power BI at the end. 
 
