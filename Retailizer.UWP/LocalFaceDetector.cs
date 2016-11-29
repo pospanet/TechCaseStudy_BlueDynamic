@@ -100,7 +100,7 @@ namespace Retailizer.UWP
             }
             if (image.PixelWidth >= xStartPosition + width + paddingWidth)
             {
-                width = width + FaceImageBoxPaddingPercentage;
+                width = width + paddingWidth;
             }
             else
             {
@@ -108,7 +108,7 @@ namespace Retailizer.UWP
             }
             if (image.PixelHeight >= yStartPosition + height + paddingHeight)
             {
-                height = height + FaceImageBoxPaddingPercentage;
+                height = height + paddingHeight;
             }
             else
             {
