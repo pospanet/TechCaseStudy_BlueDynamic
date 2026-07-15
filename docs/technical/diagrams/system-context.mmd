@@ -1,0 +1,31 @@
+flowchart TB
+  Cameras[Physical cameras]
+  Device[Windows 10 IoT UWP device app\nObserved]
+  Backend[Backend registration API\nObserved]
+  IoTHub[Azure IoT Hub\nObserved/provisioned]
+  Blob[Azure Blob Storage faces\nObserved/provisioned]
+  Route[Stream Analytics or route bridge\nDocumented/Inferred, not found]
+  ServiceBus[Service Bus queue\nObserved/provisioned, name conflict]
+  WebJob[Azure WebJob processor\nObserved]
+  FaceAPI[Project Oxford Face API\nObserved/provisioned]
+  Emotion[Emotion API\nProvisioned/configured, no observed code use]
+  DocDB[DocumentDB\nObserved/provisioned]
+  PowerBI[Power BI dashboard\nDocumented only]
+  Operator[Operator/initializer\nObserved utility]
+
+  Cameras --> Device
+  Device -->|POST /api/device| Backend
+  Backend -->|registry management| IoTHub
+  Device -->|upload cropped face JPEGs| Blob
+  Device -->|device-to-cloud JSON| IoTHub
+  IoTHub -. missing implementation .-> Route
+  Route -. expected delivery .-> ServiceBus
+  ServiceBus -->|ServiceBusTrigger events| WebJob
+  WebJob -->|download blob| Blob
+  WebJob -->|detect/identify/person/train| FaceAPI
+  WebJob -->|events and visits| DocDB
+  Emotion -. no observed runtime edge .-> WebJob
+  DocDB -. documented dataset unknown .-> PowerBI
+  Operator -->|create DB/collections/group/container| DocDB
+  Operator --> FaceAPI
+  Operator --> Blob
