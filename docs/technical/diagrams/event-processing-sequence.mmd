@@ -1,0 +1,48 @@
+sequenceDiagram
+  participant SB as Service Bus queue events
+  participant Job as COMP-JOB-002 ProcessQueueMessage
+  participant Blob as Blob Storage
+  participant Face as Face API
+  participant DDB as DocumentDbService
+  participant DocDB as DocumentDB
+
+  SB->>Job: Trigger with string JSON
+  Job->>Job: Parse deviceId, IoTHub.ConnectionDeviceId, blobName, cameraId
+  Job->>DDB: GetDevice(deviceId)
+  DDB->>DocDB: Query devices by id
+  DocDB-->>DDB: Device document
+  Job->>Job: Map cameraId to DeviceCamera.EventType
+  Job->>Blob: Download {deviceId}/{blobName}
+  Blob-->>Job: Face image stream
+  Job->>Face: DetectAsync(age, gender, smile)
+  Face-->>Job: Face[]
+  alt no faces detected
+    Job-->>SB: Return without event; blob deletion commented out
+  else face detected
+    Job->>Face: IdentifyAsync(personGroupId, faceIds)
+    alt unknown or confidence below 0.8
+      Job->>Face: CreatePersonAsync
+    else recognized
+      Job->>Face: GetPersonAsync
+    end
+    Job->>Face: AddPersonFaceAsync
+    Job->>Face: TrainPersonGroupAsync
+    Job->>DDB: SaveAsync(Event before VisitId)
+    DDB->>DocDB: Create event document
+    Job->>Job: ProcessEventAsync(Event)
+    alt event is enter
+      Job->>DDB: SaveAsync(new Visit)
+      DDB->>DocDB: Create visit document
+    else payment or leave
+      Job->>DDB: Query open Visit by tenant/store/person/status
+      DDB->>DocDB: Query visits
+      alt no open visit
+        Job->>DDB: SaveAsync(new Visit)
+      else open visit found
+        Job->>DDB: SaveAsync(modified Visit using create path)
+      end
+    end
+    Job->>DDB: SaveAsync(Event with VisitId)
+    DDB->>DocDB: Create event document
+  end
+  Note over Job,DocDB: No transaction, idempotency, or concurrency control observed

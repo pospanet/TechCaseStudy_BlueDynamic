@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant UWP as COMP-DEVICE-004 UWP DeviceConfiguration
+  participant API as COMP-API-002 Backend /api/device
+  participant IotSvc as COMP-INTEG-001 IotHubService
+  participant IoTHub as Azure IoT Hub registry
+
+  UWP->>UWP: Read EasClientDeviceInformation.Id
+  UWP->>API: POST /api/device { id }
+  Note over UWP,API: No authentication or authorization control found in inspected workspace
+  API->>IotSvc: RegisterDevice(Device)
+  IotSvc->>IoTHub: AddDeviceAsync(deviceId)
+  alt Device already exists
+    IoTHub-->>IotSvc: DeviceAlreadyExistsException
+    IotSvc->>IoTHub: GetDeviceAsync(deviceId)
+  end
+  IoTHub-->>IotSvc: Device identity and symmetric key
+  IotSvc-->>API: IoT Hub Device
+  API-->>UWP: 201 JSON { deviceKey, deviceId }
+  UWP->>UWP: Cache deviceKey in memory only

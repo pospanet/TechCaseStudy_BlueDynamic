@@ -1,0 +1,27 @@
+sequenceDiagram
+  participant Task as COMP-DEVICE-001 StartupTask
+  participant Camera as MediaCapture camera
+  participant Detector as COMP-DEVICE-002 LocalFaceDetector
+  participant Persister as COMP-DEVICE-003 AzureImagePersister
+  participant Blob as Blob Storage
+  participant IoTHub as IoT Hub
+
+  Task->>Task: Initialize DI and FaceDetector if supported
+  Task->>Camera: FindAllAsync video capture devices
+  Task->>Camera: InitializeAsync and SetMaxResolution
+  loop while true, each camera
+    Task->>Camera: CapturePhotoToStreamAsync JPEG
+    Camera-->>Task: BitmapDecoder and cloned stream
+    Task-)Detector: ProcessImageAsync not awaited
+    Detector->>Detector: Convert to Gray8 SoftwareBitmap
+    Detector->>Detector: DetectFacesAsync
+    loop each detected face
+      Detector->>Detector: Enlarge face box, crop, encode JPEG
+      Detector->>Persister: PersistAsync(face stream, cameraId)
+      Persister->>Blob: Upload {deviceId}/{guid}.jpg
+      Blob-->>Persister: Upload complete
+      Persister->>IoTHub: SendEventAsync {deviceId, blobName, cameraId}
+      IoTHub-->>Persister: Send complete
+    end
+  end
+  Note over Task,Persister: No cancellation/backpressure observed; exceptions in detector are swallowed after Debug logging

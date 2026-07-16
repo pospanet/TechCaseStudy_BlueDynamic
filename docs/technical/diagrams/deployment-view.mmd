@@ -1,0 +1,46 @@
+flowchart TB
+  subgraph DeviceSite[Retail store or device site]
+    Hardware[DragonBoard or Windows 10 IoT device\nDocumented]
+    Cameras[USB cameras\nDocumented/Observed via API use]
+    UWP[Retailizer.UWP package\nObserved]
+    Cameras --> Hardware
+    Hardware --> UWP
+  end
+
+  subgraph Provisioned[Azure resource group provisioned by ARM]
+    AppPlan[App Service plan\nProvisioned]
+    WebApp[Backend Web App\nProvisioned]
+    Storage[Storage account\nProvisioned]
+    IoTHub[IoT Hub\nProvisioned]
+    ServiceBus[Service Bus namespace\nProvisioned]
+    Queue[Queue parameter events/event_queue\nConflicting evidence]
+    DocAccount[DocumentDB account\nProvisioned]
+    FaceAcct[Face API account\nProvisioned]
+    EmotionAcct[Emotion API account\nProvisioned only]
+  end
+
+  subgraph RequiredNotProvisioned[Required/documented but not provisioned in ARM]
+    WebJob[Retailizer.Job WebJob deployment\nObserved source only]
+    DBInit[Database and collections\nInitializer-created]
+    Container[faces blob container\nInitializer-created]
+    PersonGroup[Face person group\nInitializer-created]
+    StreamAnalytics[Stream Analytics or route\nDocumented/Inferred, not found]
+    PowerBI[Power BI dashboard\nDocumented only]
+  end
+
+  AppPlan --> WebApp
+  ServiceBus --> Queue
+  UWP -->|registration HTTP| WebApp
+  UWP -->|blob upload| Storage
+  UWP -->|device-to-cloud messages| IoTHub
+  IoTHub -. missing route implementation .-> StreamAnalytics
+  StreamAnalytics -. expected queue output .-> Queue
+  WebJob --> Queue
+  WebJob --> Storage
+  WebJob --> DocAccount
+  WebJob --> FaceAcct
+  DBInit --> DocAccount
+  Container --> Storage
+  PersonGroup --> FaceAcct
+  DocAccount -. dataset unknown .-> PowerBI
+  EmotionAcct -. no observed application use .-> WebJob

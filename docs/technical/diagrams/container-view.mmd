@@ -1,0 +1,53 @@
+flowchart TB
+  subgraph DeviceBox[Windows 10 IoT device]
+    Startup[COMP-DEVICE-001\nStartupTask]
+    Detector[COMP-DEVICE-002\nLocalFaceDetector]
+    Persister[COMP-DEVICE-003\nAzureImagePersister]
+    DevConfig[COMP-DEVICE-004\nDeviceConfiguration]
+    Startup --> Detector
+    Detector --> Persister
+    Persister --> DevConfig
+  end
+
+  subgraph BackendBox[Backend host]
+    ApiHost[COMP-API-001\nBackend host]
+    DeviceApi[COMP-API-002\nDeviceController]
+    ApiHost --> DeviceApi
+  end
+
+  subgraph JobBox[WebJob process]
+    JobHost[COMP-JOB-001\nWebJob host]
+    Processor[COMP-JOB-002\nEvent processor]
+    JobHost --> Processor
+  end
+
+  subgraph CommonBox[Common library]
+    IotSvc[COMP-INTEG-001\nIotHubService]
+    DdbSvc[COMP-PERSIST-001\nDocumentDbService]
+    FaceSvc[COMP-INTEG-002\nFaceApiService]
+    StorageSvc[COMP-INTEG-003\nStorageService]
+    DTOs[DTOs\nDevice Event Visit]
+  end
+
+  subgraph AzureBox[Azure managed infrastructure]
+    IoTHub[IoT Hub]
+    Blob[Blob Storage]
+    SB[Service Bus queue]
+    DocDB[DocumentDB]
+    Face[Face API]
+    Emotion[Emotion API provisioned only]
+  end
+
+  DevConfig -->|INT-API-001| DeviceApi
+  DeviceApi --> IotSvc
+  IotSvc -->|INT-IOTHUB-REG-001| IoTHub
+  Persister -->|INT-STORAGE-UPLOAD-001| Blob
+  Persister -->|INT-IOTHUB-D2C-001| IoTHub
+  IoTHub -. INT-ROUTE-001 missing route .-> SB
+  Processor --> StorageSvc
+  Processor --> FaceSvc
+  Processor --> DdbSvc
+  StorageSvc -->|INT-BLOB-READ-001| Blob
+  FaceSvc -->|INT-FACE-*| Face
+  DdbSvc -->|INT-DOCUMENTDB-001| DocDB
+  Emotion -. no observed code use .-> Processor
